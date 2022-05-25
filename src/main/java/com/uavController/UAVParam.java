@@ -259,5 +259,6 @@ public class UAVParam {
 	public static Map<String, CopterParamLoaded>[] loadedParams;
 	public static int[] totParams;
 	public static boolean[][] paramLoaded;
+	public static double maliciousUAV;
 
 }

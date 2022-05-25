@@ -143,6 +143,9 @@ public class FollowMeHelper extends ProtocolHelper {
 		int numUAVs = API.getArduSim().getNumUAVs();
 		for (int i = 0; i < numUAVs; i++) {
 			new FollowMeListenerThread(i).start();
+			if (i!=0) {
+				new FollowMeTalkerThread(i).start();
+			}
 		}
 		API.getGUI(0).log(FollowMeText.ENABLING);
 	}

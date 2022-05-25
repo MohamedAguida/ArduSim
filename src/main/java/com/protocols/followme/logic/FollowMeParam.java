@@ -16,6 +16,7 @@ public class FollowMeParam {
 	// Simulation parameters
 	public static Queue<RemoteInput> masterData = null;					// Real UAV RC values used during a flight
 	public static volatile double masterInitialLatitude = 39.482594;	// (degrees) Latitude for simulations
+	//public static volatile double masterInitialLatitude = 100;	// (degrees) Latitude for simulations
 	public static volatile double masterInitialLongitude = -0.346265;	// (degrees) Longitude for simulations
 	public static volatile double masterInitialYaw = 0.0;				// (rad) Initial heading of the master UAV for simulations
 	

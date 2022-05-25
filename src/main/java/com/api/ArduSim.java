@@ -67,6 +67,9 @@ public class ArduSim {
 	public int getNumUAVs() {
 		return Param.numUAVs;
 	}
+	public double getMaliciousUAVs() {
+		return Param.maliciousUAVs;
+	}
 	
 	/**
 	 * Get the name of the protocol running in ArduSim.

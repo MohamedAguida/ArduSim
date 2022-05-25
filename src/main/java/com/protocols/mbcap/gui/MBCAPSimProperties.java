@@ -20,6 +20,7 @@ public class MBCAPSimProperties {
     // parameters set in GUI or file
     private List<File> missionFile;
     private int numUAVs;
+    private double maliciousUAVs;
     private int beaconInterval;
     private int beaconRenewalRate;
     private double interSampleTime;

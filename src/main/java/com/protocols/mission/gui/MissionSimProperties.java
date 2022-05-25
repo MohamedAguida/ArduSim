@@ -6,6 +6,7 @@ import com.api.MissionHelper;
 import com.api.formations.Formation;
 import com.api.formations.FormationFactory;
 import com.api.pojo.location.Waypoint;
+import com.setup.Param;
 import com.setup.Text;
 import com.uavController.UAVParam;
 import org.javatuples.Pair;
@@ -20,6 +21,7 @@ public class MissionSimProperties {
     public List<File> missionFile;
     public Formation formation;
     public double minDistance;
+    public double maliciousUAV;
 
     public boolean storeParameters(Properties guiParams, ResourceBundle fileParams){
         // First check if there are parameters set in the file who are not accessed by the gui
@@ -92,6 +94,7 @@ public class MissionSimProperties {
         for(File f :missionFile){
             if(!f.exists()){return "missionFile";}
         }
+
         return " ";
     }
 
@@ -99,7 +102,7 @@ public class MissionSimProperties {
         storeMissionFile(missionFile);
         UAVParam.groundFormation.set(formation);
         formation.init(API.getArduSim().getNumUAVs(),minDistance);
-
+        maliciousUAV =  UAVParam.maliciousUAV;
     }
 
     public void storeMissionFile(List<File> selection) {

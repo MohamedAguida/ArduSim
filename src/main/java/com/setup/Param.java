@@ -55,6 +55,7 @@ public class Param {
 
 	// Number of UAVs to be simulated
 	public static int numUAVs;
+	public static double maliciousUAVs;
 	public static AtomicInteger numUAVsTemp = new AtomicInteger();	// Used as semaphore to modify numUAVs in configuration dialogs
 	
 	// Unique UAV identifier that must be used on main.java.com.api.protocols, based on MAC address (simple enumeration while in simulator)

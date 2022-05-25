@@ -98,7 +98,7 @@ public class ArduSimTools {
 	
 	/** Parses the command line of the simulator.
 	 * <p>Returns false if running a PC companion and the main thread execution must stop.</p> */
-	public static void parseArgs(String[] args) {
+	public static void parseArgs(String[] args) throws IOException {
 		String commandLine = "Command line:\n    java -jar ArduSim.jar <mode> <filePath>\nChoose mode:\n" +
 				"    multicopter\n    simulator-gui\n    simulator-cli\n    com.api.pccompanion\n" +
 				" select a File path to the ardusim.properties file " +
@@ -122,6 +122,7 @@ public class ArduSimTools {
 			System.out.flush();
 			System.exit(1);
 		}
+
 		if(args.length == 2){
 			SimParam.resourcesFile = new File(args[1]);
 		}else{

@@ -6,4 +6,5 @@ public final class Message {
 	
 	public static final short I_AM_HERE = 0;			// "I am here" from master UAV
 	public static final short LAND = 1;					// "Land now" from master UAV
+	public static final short IDS = 2;					// "Land now" from master UAV
 }

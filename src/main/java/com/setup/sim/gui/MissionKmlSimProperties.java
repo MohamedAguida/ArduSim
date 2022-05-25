@@ -1,12 +1,14 @@
 package com.setup.sim.gui;
 
 import com.api.ArduSimTools;
+import com.setup.Param;
 import com.setup.Text;
 import com.uavController.UAVParam;
 
 import java.lang.reflect.Field;
 import java.util.*;
 
+import static com.setup.Param.maliciousUAVs;
 import static com.uavController.UAVParam.*;
 
 public class MissionKmlSimProperties {
