@@ -4,6 +4,7 @@ import es.upv.grc.mapper.Location2DGeo;
 import org.javatuples.Pair;
 
 import javax.swing.*;
+import java.io.FileNotFoundException;
 
 /** 
  * The developer must extend this class to implement a new protocol.
@@ -81,7 +82,7 @@ public abstract class ProtocolHelper {
 	/**
 	 * Action automatically performed when the user presses the Start button.
 	 * <p>This must NOT be a blocking method, just should force a protocol thread to start the protocol.</p> */
-	public abstract void startExperimentActionPerformed();
+	public abstract void startExperimentActionPerformed() throws FileNotFoundException;
 	
 	/**
 	 * Optional: Periodically issued to analyze if the experiment must be finished, and to apply measures to make the UAVs land.

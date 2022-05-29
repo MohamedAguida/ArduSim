@@ -10,6 +10,7 @@ import com.setup.sim.logic.SimParam;
 import com.uavController.UAVParam;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.Timer;
 
 public class ArduSimSetup {
@@ -20,7 +21,7 @@ public class ArduSimSetup {
 
     public ArduSimSetup(){ }
 
-    public void start(){
+    public void start() throws FileNotFoundException {
         beforeSetup();
         clickSetup();
         setup();
@@ -91,7 +92,7 @@ public class ArduSimSetup {
 
     protected void clickStart(){}
 
-    protected void runExperiment(){
+    protected void runExperiment() throws FileNotFoundException {
         while (Param.simStatus == Param.SimulatorState.READY_FOR_TEST) {
             ardusim.sleep(SimParam.SHORT_WAITING_TIME);
         }

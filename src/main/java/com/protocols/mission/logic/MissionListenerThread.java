@@ -35,7 +35,7 @@ public class MissionListenerThread extends Thread {
 
 
 	private int status[];
-	int numUAVs = 7 ;
+	int numUAVs = 5 ;
 	private Random rand;
 	public  int counterTest=0;
 	private int vote;
@@ -59,6 +59,7 @@ public class MissionListenerThread extends Thread {
 	public MissionListenerThread(int numUAV) {
 		super(FollowMeText.LISTENER_THREAD + numUAV);
 		//currentState = FollowMeParam.state[numUAV];
+		numUAVs = API.getArduSim().getNumUAVs();
 		this.numUAV = numUAV;
 		this.copter = API.getCopter(numUAV);
 		this.selfId = this.copter.getID();
@@ -102,19 +103,12 @@ public class MissionListenerThread extends Thread {
 					short type = input.readShort();
 					int id = input.readInt();
 					if (type == Message.I_AM_HERE) {
-						//masterLocation = new Location2DUTM(input.readDouble(), input.readDouble());
 						x = input.readDouble() ;
 						y = input.readDouble() ;
 
-						// uav 1 (x1,y1)
-						// uav 2 (x2,y2)
-
-
-						// uav1 ===> uav2  === x2,y2 -- x1n,y1n
-						// uav2 ==> uav1 === x1,y1 -- x2n1,y2n1
-
 						rssi_x = x + Math.random()*5 * (rand.nextBoolean() ? -1 : 1);
 						rssi_y = y + Math.random()*5 * (rand.nextBoolean() ? -1 : 1);
+
 						RssiLocation = new Location2DUTM(rssi_x, rssi_y);
 						int selfID = (int) selfId ;
 						Location2DUTM selfLocation;
@@ -125,19 +119,14 @@ public class MissionListenerThread extends Thread {
 
 						counterTest++;
 						gui.log("this is counter test"+counterTest);
-						for (int i=0; i<maliciousUAVs.length;i++){
+						for (int i=0; i<maliciousUAVs.size();i++){
 
-							if (id==maliciousUAVs[i] && counterTest>3){
+							if (id==maliciousUAVs.get(i)){
 								x=0;
 								y=Math.sqrt(rssi[selfID][id]*rssi[selfID][id] - selfLocation.x * selfLocation.x) + selfLocation.y ;
 							}
 						}
-/*
-						if (id==2 && counterTest>30){
-							x=0;
-							y=Math.sqrt(rssi[selfID][id]*rssi[selfID][id] - selfLocation.x * selfLocation.x) + selfLocation.y ;
-						}
- */
+
 
 						Location = new Location2DUTM(x, y);
 						//RssiLocation = new Location2DUTM(rssi_x, rssi_y);
@@ -148,29 +137,23 @@ public class MissionListenerThread extends Thread {
 						}
 
 						double difference = distance[selfID][id]-rssi[selfID][id] ;
-						if ( (difference > 6) || (difference < -6)){
+						if ( (difference > 10) || (difference < -10)){
 							gui.log("UAV" + selfId + ": the position of the UAV"+id+" is not accurate !");
 							gui.log("UAV" + selfId + ": distance to UAV" +id+ " is:" + distance[selfID][id]);
 							gui.log("UAV" + selfId + ": RssiDistance to UAV" +id+ " is:" + rssi[selfID][id]);
+							status[id]=1;
+							statusGlobal[id]=statusGlobal[id] + 1;
 							System.out.println();
 						}
 						else {
-							//int targetUAV = selfID;
-							//while (targetUAV == selfId) {
-							//	targetUAV = rand.ints(0, 5).findFirst().getAsInt();
-							//}
+
 							Thread.sleep(selfID*10+10000);
-							//gui.log("distance from UAV"+selfID);
-							/*
-							for (int i = 0; i< distance.length; i++){
-								for (int j=0;j< distance[i].length;j++){
+							int counter = 0 ;
+							int targetUAV;
 
-									gui.log("UAV"+i+" to UAV"+j+ distance[i][j]);
-								}
-							}
-							 */
-
-							for (int targetUAV=0; targetUAV<numUAVs; targetUAV++) {
+							while (counter <= numUAVs){
+								targetUAV = counter % numUAVs ;
+								counter++ ;
 
 								if (targetUAV==selfID || statusGlobal[targetUAV]>=vote || statusGlobal[selfID]>=vote){
 									continue;
@@ -209,8 +192,8 @@ public class MissionListenerThread extends Thread {
 								double x_self  = API.getCopter(selfID).getLocationUTM().x;
 								double y_self = API.getCopter(selfID).getLocationUTM().y;
 
-								for (int i=0; i<maliciousUAVs.length;i++){
-									if (targetUAV==maliciousUAVs[i]){
+								for (int i=0; i<maliciousUAVs.size();i++){
+									if (targetUAV==maliciousUAVs.get(i)){
 										x_target = x ;
 										y_target = y ;
 									}
@@ -265,7 +248,7 @@ public class MissionListenerThread extends Thread {
 								gui.log("UAV"+i+" is: "+status[i]);
 								if (statusGlobal[i]>=vote) {
 									API.getCopter(i).land();
-									continue;
+									//continue;
 								}
 								status[i]=0;
 							}

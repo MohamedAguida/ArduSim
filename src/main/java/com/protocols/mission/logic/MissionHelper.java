@@ -20,7 +20,10 @@ import es.upv.grc.mapper.LocationNotReadyException;
 import javafx.application.Platform;
 import javafx.stage.Stage;
 import org.javatuples.Pair;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
 import javax.swing.*;
 import java.io.*;
@@ -36,7 +39,7 @@ public class MissionHelper extends ProtocolHelper {
 	public volatile static double rssi[][];
 	public volatile static int statusGlobal[];
 	//public volatile static int counterTest=0;
-	public static int maliciousUAVs [];
+	public static ArrayList<Integer> maliciousUAVs;
 	public double maliciousUAV ;
 	public Random rand = new Random();
 	@Override
@@ -122,10 +125,26 @@ public class MissionHelper extends ProtocolHelper {
 		int numberOfMalicious = (int) (numUAVs*maliciousUAV);
 		//this.malicousUAVs = new int[numberOfMalicious];
 		API.getGUI(0).log("number of malicious UAV:"+ numberOfMalicious);
-		IntStream UAVID=  rand.ints(numberOfMalicious,0, numUAVs);
-		this.maliciousUAVs = UAVID.toArray();
-		for (int i =0; i<maliciousUAVs.length;i++){
-			API.getGUI(maliciousUAVs[i]).log("malicious UAV:"+ maliciousUAVs[i]);
+		//IntStream UAVID=  rand.ints(numberOfMalicious,0, numUAVs);
+		maliciousUAVs = new ArrayList<>();
+
+		ArrayList<Integer> list = new ArrayList<>(numUAVs);
+		for(int i = 0; i < numUAVs; i++) {
+			list.add(i);
+		}
+
+		Random rand = new Random();
+		int  j=0 ;
+		while( j<  numberOfMalicious) {
+			int index = rand.nextInt(list.size());
+			maliciousUAVs.add(list.get(index));
+			list.remove(index);
+			j++;
+		}
+
+		//this.maliciousUAVs = list.to;
+		for (int i =0; i<maliciousUAVs.size();i++){
+			API.getGUI(maliciousUAVs.get(i)).log("malicious UAV:"+ maliciousUAVs.get(i));
 		}
 		for (int i = 0; i < numUAVs; i++) {
 			new MissionListenerThread(i).start();
@@ -163,7 +182,7 @@ public class MissionHelper extends ProtocolHelper {
 	}
 
 	@Override
-	public void startExperimentActionPerformed() {
+	public void startExperimentActionPerformed() throws FileNotFoundException {
 		int numUAVs = API.getArduSim().getNumUAVs();
 		GUI gui;
 		Timer timer = new Timer();
@@ -219,43 +238,80 @@ public class MissionHelper extends ProtocolHelper {
 		}
 		String path = "/home/test/Desktop/results.json";
 
-		JSONObject json = new JSONObject();
-		String maliciousDetected = "[";
-		String maliciousSelected = "[";
-		int counter = 0;
-		for (int i=0;i<statusGlobal.length;i++){
-			if (statusGlobal[i]!=0){
-				maliciousDetected = maliciousDetected + i +",";
-				counter++;
+
+		JSONParser jsonParser = new JSONParser();
+
+		try {
+			Object obj = jsonParser.parse(new FileReader(path));
+			JSONArray jsonArray = getJsonObjectOrJsonArray(obj);
+			JSONArray malicDetect = new JSONArray();
+			JSONArray malicSelect = new JSONArray();
+
+
+			JSONObject json = new JSONObject();
+			String maliciousDetected = "[";
+			String maliciousSelected = "[";
+			int counter = 0;
+			int vote = API.getArduSim().getNumUAVs()/2;
+			for (int i=0;i<statusGlobal.length;i++){
+				if (statusGlobal[i]>=vote){
+					malicDetect.add(i);
+					//maliciousDetected = maliciousDetected + i +",";
+					counter++;
+				}
 			}
-		}
-		for(int i=0;i<maliciousUAVs.length;i++){
-				maliciousSelected = maliciousSelected + maliciousUAVs[i] +",";
-		}
-		maliciousSelected = maliciousSelected + "]";
-		maliciousDetected = maliciousDetected + "]";
+			for(int i=0;i<maliciousUAVs.size();i++){
+				malicSelect.add(maliciousUAVs.get(i));
+				//maliciousSelected = maliciousSelected + maliciousUAVs.get(i) +",";
+			}
+			maliciousSelected = maliciousSelected + "]";
+			maliciousDetected = maliciousDetected + "]";
+
+
+
 			try {
 				json.put("NumUAVs", numUAVs);
-				json.put("% of MaliciousUAVs",maliciousUAV );
-				json.put("NumMaliciousUAVs",(int) (numUAVs*maliciousUAV));
-				json.put("NumMaliciousDetected",counter);
-				json.put("MaliciousSelected",maliciousSelected );
-				json.put("MaliciousDetected",maliciousDetected );
+				json.put("MaliciousUAVs",maliciousUAV );
+				//json.put("NumMaliciousUAVs",(int) (numUAVs*maliciousUAV));
+				//json.put("NumMaliciousDetected",counter);
+				json.put("MaliciousSelected",malicSelect );
+				json.put("MaliciousDetected",malicDetect );
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 
-		try (PrintWriter out = new PrintWriter(new FileWriter(path))) {
-			out.write(json.toString());
+			jsonArray.add(json);
+
+			System.out.println(jsonArray);
+
+			FileWriter file = new FileWriter(path);
+			file.write(jsonArray.toJSONString());
+			file.flush();
+			file.close();
+
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+
 
 	}
 
 	@Override
 	public void forceExperimentEnd() {
 
+	}
+
+	public JSONArray getJsonObjectOrJsonArray(Object object){
+		JSONArray jsonArray = new JSONArray();
+		if (object instanceof Map){
+			JSONObject jsonObject = new JSONObject();
+			jsonObject.putAll((Map)object);
+			jsonArray.add(jsonObject);
+		}
+		else if (object instanceof List){
+			jsonArray.addAll((List)object);
+		}
+		return jsonArray;
 	}
 
 	@Override

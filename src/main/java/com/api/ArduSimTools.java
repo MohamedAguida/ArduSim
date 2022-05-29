@@ -123,13 +123,32 @@ public class ArduSimTools {
 			System.exit(1);
 		}
 
-		if(args.length == 2){
-			SimParam.resourcesFile = new File(args[1]);
+		if(args.length == 4){
+			SimParam.resourcesFile = new File(args[3]);
 		}else{
 			String fs = File.separator;
 			SimParam.resourcesFile = new File(API.getFileTools().getSourceFolder().toString() +
 					fs + "main" + fs + "resources" + fs + "setup" + fs + "SimulationParam.properties");
 		}
+		FileInputStream in = new FileInputStream("/home/test/IdeaProjects/ArduSim/src/main/resources/setup/SimulationParam.properties");
+		Properties props = new Properties();
+		props.load(in);
+		in.close();
+
+		FileOutputStream out = new FileOutputStream("/home/test/IdeaProjects/ArduSim/src/main/resources/setup/SimulationParam.properties");
+		props.setProperty("numUAVs", String.valueOf(args[1]));
+		props.store(out, null);
+		out.close();
+
+		FileInputStream ins = new FileInputStream("/home/test/IdeaProjects/ArduSim/src/main/resources/protocols/mission/missionParam.properties");
+		Properties propss = new Properties();
+		propss.load(ins);
+		ins.close();
+
+		FileOutputStream outs = new FileOutputStream("/home/test/IdeaProjects/ArduSim/src/main/resources/protocols/mission/missionParam.properties");
+		propss.setProperty("maliciousUAV", String.valueOf(args[2]));
+		propss.store(outs, null);
+		outs.close();
 	}
 	
 	/** Parses the ini file located beside the ArduSim executable file (Project folder in simulations). */
