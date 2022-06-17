@@ -34,6 +34,7 @@ public class MissionTalkerThread extends Thread {
 	private long cicleTime;		// Cicle time used for sending messages
 	private long waitingTime;	// (ms) Time to wait between two sent messages
 	private int myID ;
+	int PacketCounter = 0 ;
 	protected static volatile boolean protocolStarted = false;
 	UAVCurrentStatus currentStatus;
 	@SuppressWarnings("unused")
@@ -62,17 +63,20 @@ public class MissionTalkerThread extends Thread {
 		//}
 		Location2DUTM here;
 		double z, yaw;
+
 		cicleTime = System.currentTimeMillis();
 
 		//while (currentState.get() == FOLLOWING) {
 		try{
 			while (true) {
+				PacketCounter = PacketCounter + 1;
 				here = copter.getLocationUTM();
 				z = copter.getAltitudeRelative();
 				yaw = copter.getHeading();
 				output.reset();
 				output.writeShort(Message.I_AM_HERE);
 				output.writeInt(myID);
+				output.writeInt(PacketCounter);
 				output.writeDouble(here.x);
 				output.writeDouble(here.y);
 				output.writeDouble(z);
@@ -89,12 +93,12 @@ public class MissionTalkerThread extends Thread {
 				// Timer
 
 				Thread.sleep(20000);
-				gui.log("UAV "+myID+": the global status is: ");
+		//		gui.log("UAV "+myID+": the global status is: ");
 
-				for (int i=0;i<statusGlobal.length;i++){
-					gui.log("UAV"+i+": "+statusGlobal[i]);
-				}
-				gui.log("=====================================================");
+		//		for (int i=0;i<statusGlobal.length;i++){
+		//			gui.log("UAV"+i+": "+statusGlobal[i]);
+		//		}
+//				gui.log("=====================================================");
 			}
 
 		}catch (Exception e){

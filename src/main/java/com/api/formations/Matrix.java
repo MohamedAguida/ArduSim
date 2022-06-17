@@ -37,7 +37,7 @@ class Matrix extends Formation{
         // Center UAV
         positions[0] = new FormationPoint(0, 0, 0);
 
-        ArrayList<Double> startAngles = getStartAngles(19);
+        ArrayList<Double> startAngles = getStartAngles(100);
 
         int distance = 0;
         for(int i=0;i<numUAVs-1;i++){

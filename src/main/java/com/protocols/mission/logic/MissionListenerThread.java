@@ -75,6 +75,19 @@ public class MissionListenerThread extends Thread {
 		this.rand = new Random() ;
 		this.vote = ardusim.getNumUAVs()/2;
 	}
+	//public static synchronized void increment(int i){
+	//	  statusGlobal[i]=statusGlobal[i]+1 ;
+	//}
+	//public static synchronized void initial(int i){
+	//	statusGlobal[i]=0;
+	//}
+	public int sum(int num){
+		int summ = 0 ;
+		for (int i=0;i<num;i++){
+			summ= summ + i ;
+		}
+		return  summ;
+	}
 
 	@Override
 	public void run() {
@@ -87,13 +100,11 @@ public class MissionListenerThread extends Thread {
 		gui.logUAV(FollowMeText.FOLLOWING);
 		gui.updateProtocolState(FollowMeText.FOLLOWING);
 		long waitingTime;
-		//gui.log("I'm here before start talker thread" + numUAV);
 		Location2DUTM Location;
 		Location2DUTM RssiLocation;
 		double x, rssi_x;
 		double y, rssi_y;
-		gui.log("hadi men bara");
-		//while (currentState.get() == FOLLOWING) {
+		int PacketID;
 		try {
 			while (true) {
 
@@ -103,6 +114,7 @@ public class MissionListenerThread extends Thread {
 					short type = input.readShort();
 					int id = input.readInt();
 					if (type == Message.I_AM_HERE) {
+						PacketID = input.readInt();
 						x = input.readDouble() ;
 						y = input.readDouble() ;
 
@@ -117,8 +129,8 @@ public class MissionListenerThread extends Thread {
 							rssi[selfID][id] = selfLocation.distance(RssiLocation);
 						}
 
-						counterTest++;
-						gui.log("this is counter test"+counterTest);
+					//	counterTest++;
+
 						for (int i=0; i<maliciousUAVs.size();i++){
 
 							if (id==maliciousUAVs.get(i)){
@@ -142,41 +154,46 @@ public class MissionListenerThread extends Thread {
 							gui.log("UAV" + selfId + ": distance to UAV" +id+ " is:" + distance[selfID][id]);
 							gui.log("UAV" + selfId + ": RssiDistance to UAV" +id+ " is:" + rssi[selfID][id]);
 							status[id]=1;
-							statusGlobal[id]=statusGlobal[id] + 1;
+							//increment(id);
+							int temp1 = statusGlobal.incrementAndGet(id);
 							System.out.println();
 						}
 						else {
 
 							Thread.sleep(selfID*10+10000);
 							int counter = 0 ;
-							int targetUAV;
+							//int targetUAV;
 
-							while (counter <= numUAVs){
-								targetUAV = counter % numUAVs ;
-								counter++ ;
+							//while (counter <= numUAVs)
+							for (int targetUAV=0;targetUAV<numUAVs;targetUAV++){
+								//targetUAV = counter % numUAVs ;
 
-								if (targetUAV==selfID || statusGlobal[targetUAV]>=vote || statusGlobal[selfID]>=vote){
+								//counter++ ;
+								if (statusGlobal.get(selfID)>=1){
+									break;
+								}
+								if (targetUAV==selfID || statusGlobal.get(targetUAV)>=vote){
 									continue;
 								}
 								int juryUAV1 = selfID;
 
 								do {
 									juryUAV1 = rand.ints(0, numUAVs).findFirst().getAsInt();
-								} while (juryUAV1 == selfID || juryUAV1 == targetUAV || statusGlobal[juryUAV1]>=vote);
+								} while (juryUAV1 == selfID || juryUAV1 == targetUAV || statusGlobal.get(juryUAV1)>=1);
 
 								int juryUAV2 = selfID;
 
 								do {
 									juryUAV2 = rand.ints(0, numUAVs).findFirst().getAsInt();
-								} while (juryUAV2 == selfID || juryUAV2 == targetUAV || juryUAV2 == juryUAV1 || statusGlobal[juryUAV2]>=vote);
+								} while (juryUAV2 == selfID || juryUAV2 == targetUAV || juryUAV2 == juryUAV1 || statusGlobal.get(juryUAV2)>=1);
 
 
 
 								// start checking if the coordinations are the same !
 								// src: http://paulbourke.net/geometry/circlesphere/?fbclid=IwAR2bL_rmkSpOcnX0API-XJk41pM0FMQ7-1CUflVqIyvrh1tkDR38xENQhhI
-								gui.log("juryUAV1:"+juryUAV1);
-								gui.log("juryUAV2:"+juryUAV2);
-								gui.log("targetUAV:"+targetUAV);
+//								gui.log("juryUAV1:"+juryUAV1);
+//								gui.log("juryUAV2:"+juryUAV2);
+//								gui.log("targetUAV:"+targetUAV);
 
 
 
@@ -227,33 +244,79 @@ public class MissionListenerThread extends Thread {
 
 
 								if ((testDiff_jury1 < 1 || testDiff_jury1 > -1) && (testDiff_self < 1 || testDiff_self > -1) && (testDiff_jury2 < 1 || testDiff_jury2 > -1)) {
-									gui.log("UAV" + selfID + ": the position of the UAV" + targetUAV + " is accurate !");
-									status[targetUAV]=2;
-									status[juryUAV1]=2;
-									status[juryUAV2]=2;
+		//							gui.log("UAV" + selfID + ": the position of the UAV" + targetUAV + " is accurate !");
+									status[targetUAV]=-1;
+									status[juryUAV1]=-1;
+									status[juryUAV2]=-1;
 								} else {
-									if (status[juryUAV1]==2 && status[juryUAV2]==2 ) {
-										status[targetUAV]=1;
-										statusGlobal[targetUAV]=statusGlobal[targetUAV] + 1;
+									if (status[juryUAV1]==-1 && status[juryUAV2]==-1 ) {
+										status[targetUAV]= status[targetUAV] + 1;
+										//synchronized (this) {
+										//	statusGlobal[targetUAV] = statusGlobal[targetUAV] + 1;
+										//}
 
-
-										gui.log("this is from coordination test");
-										gui.log("UAV" + selfID + ": the position of the UAV" + targetUAV + " is not accurate !");
+		//								gui.log("this is from coordination test");
+		//								gui.log("UAV" + selfID + ": the position of the UAV" + targetUAV + " is not accurate !");
 									}
 									}
-								gui.log("==================================================");
+								//gui.log("==================================================");
 							}
-							gui.log("UAV "+selfID+" is saying that: ");
-							for (int i=0;i<status.length;i++){
-								gui.log("UAV"+i+" is: "+status[i]);
-								if (statusGlobal[i]>=vote) {
-									API.getCopter(i).land();
-									//continue;
+//							gui.log("UAV "+selfID+" is saying that: ");
+							//
+
+							//synchronized (this) {
+							//	cnt = pauseIt.incrementAndGet();
+							//}
+
+
+							if (statusGlobal.get(selfID)>=vote){
+							}
+							else {
+								for (int i = 0; i < status.length; i++) {
+//								gui.log("UAV"+i+" is: "+status[i]);
+									if (status[i]==1) {
+										if (statusGlobal.get(i) < vote) {
+											int temp = statusGlobal.incrementAndGet(i);
+											//synchronized (this) {
+											//	statusGlobal[i] = statusGlobal[i] + 1;
+											//}
+										}
+									}
+									else if (status[i]==-1){
+										status[i]=0;
+									}
+									if (statusGlobal.get(i) >= vote) {
+										API.getCopter(i).land();
+										continue;
+									}
+
+//									gui.log("UAV"+selfId+": UAV"+i+" is: "+status[i]);
 								}
-								status[i]=0;
+								//while (cnt!=numUAVs){
+								//}
+								//Thread.sleep(2000);
+								if (selfID==18){
+									gui.log("phase start:===========================================" );
+								}
+								pauseIt.set(0);
+								for (int i = 0; i < statusGlobal.length(); i++) {
+									if (statusGlobal.get(i) < vote && statusGlobal.get(i) > 0 && selfID == 18) {
+										//synchronized (this) {
+										//	statusGlobal[i] = 0;
+										//}
+								//		initial(i);
+										gui.log("UAV"+i+" statusGlobal is "+ statusGlobal.get(i));
+										//statusGlobal.set(i,0);
+									}
+								}
+								if (selfID==18){
+									gui.log("phase ended ============================================" );
+								}
+
 							}
-							gui.log("==================================================");
+//							gui.log("==================================================");
 							//Thread.sleep(2000);
+
 
 
 
@@ -263,6 +326,7 @@ public class MissionListenerThread extends Thread {
 			}
 		}catch (Exception e){
 		System.out.println(e.getMessage());
+
 		}
 		gui.logUAV(FollowMeText.FINISH);
 		gui.updateProtocolState(FollowMeText.FINISH);

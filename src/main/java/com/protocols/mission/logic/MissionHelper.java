@@ -2,6 +2,7 @@ package com.protocols.mission.logic;
 
 import com.api.*;
 import com.api.formations.Formation;
+import com.api.pojo.AtomicDoubleArray;
 import com.api.pojo.location.LogPoint;
 import com.api.pojo.location.Waypoint;
 import com.protocols.followme.logic.FollowMeListenerThread;
@@ -29,6 +30,8 @@ import javax.swing.*;
 import java.io.*;
 import java.util.*;
 import java.util.Timer;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicIntegerArray;
 import java.util.stream.IntStream;
 
 /** Implementation of the protocol Mission to allow the user to simply follow missions. It is based on MBCAP implementation.
@@ -37,7 +40,10 @@ import java.util.stream.IntStream;
 public class MissionHelper extends ProtocolHelper {
 	public volatile static double distance[][];
 	public volatile static double rssi[][];
-	public volatile static int statusGlobal[];
+	public  static AtomicIntegerArray statusGlobal;
+	public volatile static int cnt=0;
+	public static AtomicInteger pauseIt;
+//	public static AtomicInteger st[];
 	//public volatile static int counterTest=0;
 	public static ArrayList<Integer> maliciousUAVs;
 	public double maliciousUAV ;
@@ -121,16 +127,27 @@ public class MissionHelper extends ProtocolHelper {
 		int numUAVs = API.getArduSim().getNumUAVs();
 		this.distance = new double[numUAVs][numUAVs];
 		this.rssi = new double[numUAVs][numUAVs];
-		this.statusGlobal = new int[numUAVs];
+		this.statusGlobal = new AtomicIntegerArray(numUAVs);
+		for (int i = 0;i<statusGlobal.length();i++){
+			statusGlobal.set(i,0);
+		}
 		int numberOfMalicious = (int) (numUAVs*maliciousUAV);
+		pauseIt = new AtomicInteger(0);
 		//this.malicousUAVs = new int[numberOfMalicious];
 		API.getGUI(0).log("number of malicious UAV:"+ numberOfMalicious);
 		//IntStream UAVID=  rand.ints(numberOfMalicious,0, numUAVs);
 		maliciousUAVs = new ArrayList<>();
 
 		ArrayList<Integer> list = new ArrayList<>(numUAVs);
-		for(int i = 0; i < numUAVs; i++) {
-			list.add(i);
+		if (numberOfMalicious == numUAVs) {
+			for(int i = 0; i < numUAVs; i++) {
+				list.add(i);
+			}
+		}
+		else {
+			for (int i = 5; i < numUAVs; i++) {
+				list.add(i);
+			}
 		}
 
 		Random rand = new Random();
@@ -146,6 +163,7 @@ public class MissionHelper extends ProtocolHelper {
 		for (int i =0; i<maliciousUAVs.size();i++){
 			API.getGUI(maliciousUAVs.get(i)).log("malicious UAV:"+ maliciousUAVs.get(i));
 		}
+
 		for (int i = 0; i < numUAVs; i++) {
 			new MissionListenerThread(i).start();
 		}
@@ -253,12 +271,13 @@ public class MissionHelper extends ProtocolHelper {
 			String maliciousSelected = "[";
 			int counter = 0;
 			int vote = API.getArduSim().getNumUAVs()/2;
-			for (int i=0;i<statusGlobal.length;i++){
-				if (statusGlobal[i]>=vote){
+			for (int i=0;i<statusGlobal.length();i++){
+				if (statusGlobal.get(i)>=vote){
 					malicDetect.add(i);
 					//maliciousDetected = maliciousDetected + i +",";
 					counter++;
 				}
+				API.getGUI(i).log("Status Global UAV"+i+":"+statusGlobal.get(i));
 			}
 			for(int i=0;i<maliciousUAVs.size();i++){
 				malicSelect.add(maliciousUAVs.get(i));
@@ -272,10 +291,10 @@ public class MissionHelper extends ProtocolHelper {
 			try {
 				json.put("NumUAVs", numUAVs);
 				json.put("MaliciousUAVs",maliciousUAV );
-				//json.put("NumMaliciousUAVs",(int) (numUAVs*maliciousUAV));
-				//json.put("NumMaliciousDetected",counter);
-				json.put("MaliciousSelected",malicSelect );
-				json.put("MaliciousDetected",malicDetect );
+				json.put("NumMaliciousUAVs",(int) (numUAVs*maliciousUAV));
+				json.put("NumMaliciousDetected",malicDetect.size());
+				//json.put("MaliciousSelected",malicSelect );
+				//json.put("MaliciousDetected",malicDetect );
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
